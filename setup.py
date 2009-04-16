@@ -4,12 +4,12 @@ import re
 
 setup(
     name='MinificationWebHelpers',
-    version='0.2.1',
+    version='0.2.2',
     description='CSS and Javascript Minification/Combination Upgrade to WebHelpers',
-    long_description = re.sub(r'(\.\.[\s]*[\w]*::[\s]*[\w+]*\n)+', r'::\n', open('README.txt').read()),
+    long_description=open('README.txt').read(),
     author='Pedro Algarvio & Domen Kozar',
     author_email='ufs@ufsoft.org',
-    url='http://pastie.ufsoft.org/wiki/MinificationWebHelpers',
+    url='http://docs.fubar.si/minwebhelpers/',
     install_requires=["Pylons", "WebHelpers", "beaker", "cssutils"],
     packages=find_packages(),
     include_package_data=True,

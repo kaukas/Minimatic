@@ -1,0 +1,24 @@
+What is MinificationWebHelpers?
+===============================
+
+Consider the MinificationWebHelpers_ as an extension to WebHelpers_.
+
+Basicly it adds two more options to the WebHelpers_ javascript_link_
+and stylesheet_link_ functions:
+
+* **minified**: Minifies, ie, reduces as much as possible each of the files
+  passed to it's minimum size to reduce page load times.
+* **combined**: Joins all files passed into a single one to reduce server
+  requests which in turn reduces page load times.
+
+For an up-to-date read of the documentation, please `read the documentation
+page on site`__.
+
+Mercurial repository is located at bitbucket.org_.
+
+.. _MinificationWebHelpers: http://docs.fubar.si/minwebhelpers/
+.. _WebHelpers: http://pylonshq.com/docs/en/0.9.7/thirdparty/webhelpers/
+.. _javascript_link: http://pylonshq.com/docs/en/0.9.7/thirdparty/webhelpers/html/html/#webhelpers.html.tags.javascript_link
+.. _stylesheet_link: http://pylonshq.com/docs/en/0.9.7/thirdparty/webhelpers/html/html/#webhelpers.html.tags.stylesheet_link
+.. _bitbucket.org: http://bitbucket.org/iElectric/minificationwebhelpers/
+.. __: http://docs.fubar.si/minwebhelpers/
