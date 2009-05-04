@@ -17,120 +17,107 @@ from webhelpers.html.tags import javascript_link as __javascript_link
 from webhelpers.html.tags import stylesheet_link as __stylesheet_link
 
 
-log = logging.getLogger(__name__)
 __all__ = ['javascript_link', 'stylesheet_link']
+log = logging.getLogger(__name__)
 beaker_kwargs = dict(key='sources',
                      expire='never',
                      type='memory',
                      invalidate_on_startup=True)
 
-def javascript_link(*sources, **options):
+@beaker_cache(**beaker_kwargs)
+def combine_sources(sources, ext, fs_root):
+    if len(sources) < 2:
+        return sources
 
-    @beaker_cache(**beaker_kwargs)
-    def combine_sources(sources, fs_root):
-        if len(sources) < 2:
-            return sources
+    names = list()
+    js_buffer = StringIO.StringIO()
+    base = os.path.commonprefix([os.path.dirname(s) + '/' for s in sources])
 
-        httpbase = os.path.commonprefix(
-            ['/'.join(s.split('/')[:-1])+'/' for s in sources])
-        jsbuffer = StringIO.StringIO()
-        names = []
-        bases = os.path.commonprefix([b.split('/')[:-1] for b in sources])
-        for source in sources:
-            _source = os.path.join(fs_root, *(source).split('/'))
-            names.append(source.split('/')[-1:][0][:-3])
-            jsbuffer.write(open(_source, 'r').read())
-            jsbuffer.write('\n')
-        fname = '.'.join(names+['COMBINED', 'js'])
-        fpath = os.path.join(fs_root, *((httpbase+fname).split('/')))
-        open(fpath, 'w').write(jsbuffer.getvalue())
-        return [httpbase + fname]
+    for source in sources:
+        # get a list of all filenames without extensions
+        js_file = os.path.basename(source)
+        js_file_name = os.path.splitext(js_file)[0]
+        names.append(js_file_name)
 
-    @beaker_cache(**beaker_kwargs)
-    def get_sources(sources, fs_root=''):
-        jsm = JavascriptMinify()
-        _sources = []
+        # build a master file with all contents
+        full_source = os.path.join(fs_root, *(source).split('/'))
+        f = open(full_source, 'r')
+        js_buffer.write(f.read())
+        js_buffer.write('\n')
+        f.close()
 
-        for source in sources:
-            _source = os.path.join(fs_root, *(source[:-3]+'.min.js').split('/'))
-            if os.path.exists(_source):
-                _sources.append(source[:-3]+'.min.js')
-            else:
-                _source = os.path.join(fs_root, *source.split('/'))
-                minified = _source[:-3]+'.min.js'
-                jsm.minify(open(_source, 'r'), open(minified, 'w'))
-                _sources.append(source[:-3]+'.min.js')
-        return _sources
+    # glue a new name and generate path to it
+    fname = '.'.join(names + ['COMBINED', ext])
+    if base.startswith('/'):
+        base = base[1:]
+    fpath = os.path.join(fs_root, base, fname)
 
-    combined = options.pop('combined', False)
-    minified = options.pop('minified', False)
+    # write the combined file
+    f = open(fpath, 'w')
+    f.write(js_buffer.getvalue())
+    f.close()
 
-    if config.get('debug', False):
-        return __javascript_link(*sources, **options)
+    return [base + fname]
 
-    if options.get('builtins', False):
-        return __javascript_link(*sources, **options)
+@beaker_cache(**beaker_kwargs)
+def get_sources(sources, ext, fs_root=''):
+    if 'js' in ext:
+        js_minify = JavascriptMinify()
+    minified_sources = []
 
-    fs_root = root = config.get('pylons.paths').get('static_files')
-    if combined:
-        sources = combine_sources([source for source in sources], fs_root)
+    for source in sources:
+        # generate full path to source
+        no_ext_source = os.path.splitext(source)[0]
+        full_source = os.path.join(fs_root, *(no_ext_source + ext).split('/'))
 
-    if minified:
-        sources = get_sources([source for source in sources], fs_root)
-    return __javascript_link(*sources, **options)
+        # TODO: this leaves a bug when source is changed but not updated
+        if os.path.exists(full_source):
+            minified_sources.append(no_ext_source + ext)
+        else:
+            # minified source doesnt exist, write it
+            full_source = os.path.join(fs_root, *(source).split('/'))
+            no_ext_full_source = os.path.splitext(full_source)[0]
+            minified = no_ext_full_source + ext
 
-def stylesheet_link(*sources, **options):
+            f_minified_source = open(minified, 'w')
 
-    @beaker_cache(**beaker_kwargs)
-    def combine_sources(sources, fs_root):
-        if len(sources) < 2:
-            return sources
-
-        httpbase = os.path.commonprefix(
-            ['/'.join(s.split('/')[:-1])+'/' for s in sources])
-        jsbuffer = StringIO.StringIO()
-        names = []
-        for source in sources:
-            _source = os.path.join(fs_root, *(source).split('/'))
-            names.append(source.split('/')[-1:][0][:-4])
-            jsbuffer.write(open(_source, 'r').read())
-            jsbuffer.write('\n')
-        fname = '.'.join(names+['COMBINED', 'css'])
-        fpath = os.path.join(fs_root, *((httpbase+fname).split('/')))
-        open(fpath, 'w').write(jsbuffer.getvalue())
-        return [httpbase + fname]
-
-    @beaker_cache(**beaker_kwargs)
-    def get_sources(sources, fs_root):
-        _sources = []
-
-        for source in sources:
-            _source = os.path.join(fs_root, *(source[:-4]+'.min.css').split('/'))
-            if os.path.exists(_source):
-                _sources.append(source[:-4]+'.min.css')
-            else:
-                _source = os.path.join(fs_root, *source.split('/'))
-                minified = _source[:-4]+'.min.css'
-                sheet = cssutils.parse(_source)
+            # minify js source (read stream is auto-closed inside)
+            if 'js' in ext:
+                js_minify.minify(open(full_source, 'r'), f_minified_source)
+            # minify css source
+            if 'css' in ext:
+                sheet = cssutils.parse(full_source)
                 sheet.setSerializer(CSSUtilsMinificationSerializer())
                 cssutils.ser.prefs.useMinified()
-                open(minified, 'w').write(sheet.cssText)
-                _sources.append(source[:-4]+'.min.css')
-        return _sources
+                f_minified_source.write(sheet.cssText)
 
+            f_minified_source.close()
+            minified_sources.append(no_ext_source + ext)
+
+    return minified_sources
+
+def base_link(ext, *sources, **options):
     combined = options.pop('combined', False)
     minified = options.pop('minified', False)
+    fs_root = config.get('pylons.paths').get('static_files')
 
-    if config.get('debug', False):
+    if not (config.get('debug', False) or options.get('builtins', False)):
+        if combined:
+            sources = combine_sources(list(sources), ext, fs_root)
+
+        if minified:
+            sources = get_sources(list(sources), '.min.' + ext, fs_root)
+
+    if 'js' in ext:
+        return __javascript_link(*sources, **options)
+    if 'css' in ext:
         return __stylesheet_link(*sources, **options)
 
-    fs_root = root = config.get('pylons.paths').get('static_files')
-    if combined:
-        sources = combine_sources([source for source in sources], fs_root)
+def javascript_link(*sources, **options):
+    return base_link('js', *sources, **options)
 
-    if minified:
-        sources = get_sources([source for source in sources], fs_root)
-    return __stylesheet_link(*sources, **options)
+def stylesheet_link(*sources, **options):
+    return base_link('css', *sources, **options)
 
 
 class CSSUtilsMinificationSerializer(CSSSerializer):

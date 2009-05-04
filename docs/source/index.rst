@@ -76,7 +76,7 @@ It's as easy as::
 
 Or if you wish to install current trunk::
 
-  sudo easy_install http://bitbucket.org/iElectric/tvnextsi/get/tip.zip
+  sudo easy_install http://bitbucket.org/iElectric/minificationwebhelpers/get/tip.zip
 
 
 .. _MinificationWebHelpers: http://docs.fubar.si/minwebhelpers/

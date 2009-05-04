@@ -4,7 +4,7 @@ import re
 
 setup(
     name='MinificationWebHelpers',
-    version='0.2.2',
+    version='0.3.0',
     description='CSS and Javascript Minification/Combination Upgrade to WebHelpers',
     long_description=open('README.txt').read(),
     author='Pedro Algarvio & Domen Kozar',
