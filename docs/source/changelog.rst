@@ -1,6 +1,7 @@
 xx-05-2009: Domen Kozar v0.3.0
 ------------------------------
 
+	* fixed a bug when sources were not invalidated (in cache) on startup
   * complete refactoring
 
 16-04-2009: Domen Kozar v0.2.1

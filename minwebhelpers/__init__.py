@@ -40,7 +40,7 @@ def combine_sources(sources, ext, fs_root):
         names.append(js_file_name)
 
         # build a master file with all contents
-        full_source = os.path.join(fs_root, *(source).split('/'))
+        full_source = os.path.join(fs_root, source.lstrip('/'))
         f = open(full_source, 'r')
         js_buffer.write(f.read())
         js_buffer.write('\n')
@@ -48,9 +48,7 @@ def combine_sources(sources, ext, fs_root):
 
     # glue a new name and generate path to it
     fname = '.'.join(names + ['COMBINED', ext])
-    if base.startswith('/'):
-        base = base[1:]
-    fpath = os.path.join(fs_root, base, fname)
+    fpath = os.path.join(fs_root, base.lstrip('/'), fname)
 
     # write the combined file
     f = open(fpath, 'w')
@@ -60,7 +58,7 @@ def combine_sources(sources, ext, fs_root):
     return [base + fname]
 
 @beaker_cache(**beaker_kwargs)
-def get_sources(sources, ext, fs_root=''):
+def minify_sources(sources, ext, fs_root=''):
     if 'js' in ext:
         js_minify = JavascriptMinify()
     minified_sources = []
@@ -68,31 +66,27 @@ def get_sources(sources, ext, fs_root=''):
     for source in sources:
         # generate full path to source
         no_ext_source = os.path.splitext(source)[0]
-        full_source = os.path.join(fs_root, *(no_ext_source + ext).split('/'))
+        full_source = os.path.join(fs_root, (no_ext_source + ext).lstrip('/'))
 
-        # TODO: this leaves a bug when source is changed but not updated
-        if os.path.exists(full_source):
-            minified_sources.append(no_ext_source + ext)
-        else:
-            # minified source doesnt exist, write it
-            full_source = os.path.join(fs_root, *(source).split('/'))
-            no_ext_full_source = os.path.splitext(full_source)[0]
-            minified = no_ext_full_source + ext
+        # generate minified source path
+        full_source = os.path.join(fs_root, (source).lstrip('/'))
+        no_ext_full_source = os.path.splitext(full_source)[0]
+        minified = no_ext_full_source + ext
 
-            f_minified_source = open(minified, 'w')
+        f_minified_source = open(minified, 'w')
 
-            # minify js source (read stream is auto-closed inside)
-            if 'js' in ext:
-                js_minify.minify(open(full_source, 'r'), f_minified_source)
-            # minify css source
-            if 'css' in ext:
-                sheet = cssutils.parse(full_source)
-                sheet.setSerializer(CSSUtilsMinificationSerializer())
-                cssutils.ser.prefs.useMinified()
-                f_minified_source.write(sheet.cssText)
+        # minify js source (read stream is auto-closed inside)
+        if 'js' in ext:
+            js_minify.minify(open(full_source, 'r'), f_minified_source)
+        # minify css source
+        if 'css' in ext:
+            sheet = cssutils.parseFile(full_source)
+            sheet.setSerializer(CSSUtilsMinificationSerializer())
+            cssutils.ser.prefs.useMinified()
+            f_minified_source.write(sheet.cssText)
 
-            f_minified_source.close()
-            minified_sources.append(no_ext_source + ext)
+        f_minified_source.close()
+        minified_sources.append(no_ext_source + ext)
 
     return minified_sources
 
@@ -106,7 +100,7 @@ def base_link(ext, *sources, **options):
             sources = combine_sources(list(sources), ext, fs_root)
 
         if minified:
-            sources = get_sources(list(sources), '.min.' + ext, fs_root)
+            sources = minify_sources(list(sources), '.min.' + ext, fs_root)
 
     if 'js' in ext:
         return __javascript_link(*sources, **options)
