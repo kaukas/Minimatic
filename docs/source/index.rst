@@ -17,13 +17,23 @@
 
 Consider the MinificationWebHelpers_ as an extension to WebHelpers_.
 
-Basicly it adds two more options to the WebHelpers_ javascript_link_
+Basicly it adds these options to the WebHelpers_ javascript_link_
 and stylesheet_link_ functions:
 
-* **minified**: Minifies, ie, reduces as much as possible each of the files
+* **minified** (bool): Minifies, ie, reduces as much as possible each of the files
   passed to it's minimum size to reduce page load times.
-* **combined**: Joins all files passed into a single one to reduce server
+* **combined** (bool): Joins all files passed into a single one to reduce server
   requests which in turn reduces page load times.
+* **beaker_kwargs** (dict): override default arguments that will be passed to `beaker_cache`.
+`beaker_kwargs.update()` is issued on default arguments.
+
+.. code-block:: python
+
+	# default args
+	beaker_kwargs = dict(key='sources', expire='never', type='memory', invalidate_on_startup=True)
+
+.. versionadded:: 0.3.1
+	`beaker_kwargs` parameter
 
 For an up-to-date read of the documentation, please `read the documentation
 page on site`__.
@@ -33,8 +43,6 @@ Terminology
 
 MinificationWebHelpers_ cache your javascript and css files through Beaker_'s
 ``@beaker.cache`` decorator.
-
-Memory cache is used together with `expire='never'` and `invalidate_on_startup=True`.
 
 Javascript minification is achieved through python port of jsmin_.
 
@@ -60,7 +68,8 @@ Then, inside a template you could have:
     ${ h.stylesheet_link('/css/style1.css',
                          '/css/style2.css',
                          minified=True,
-                         combined=True ) }
+                         combined=True,
+                         beaker_kwargs=dict(invalidate_on_startup=False)) }
   </head>
 
 The above would mean ``file1.js`` and ``file2.js`` would be combined and then

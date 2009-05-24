@@ -3,7 +3,7 @@
 
   * updated documentation
   * added `beaker_kwargs` option to both function that overrides default caching behaviour
-	* fixed a bug when paths were not joined correctly
+  * fixed a bug when paths were not joined correctly
   * written unittests
 
 04-05-2009: Domen Kozar v0.3.0
