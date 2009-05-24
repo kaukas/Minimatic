@@ -1,7 +1,15 @@
-xx-05-2009: Domen Kozar v0.3.0
+22-05-2009: Domen Kozar v0.3.1
 ------------------------------
 
-	* fixed a bug when sources were not invalidated (in cache) on startup
+  * updated documentation
+  * added `beaker_kwargs` option to both function that overrides default caching behaviour
+	* fixed a bug when paths were not joined correctly
+  * written unittests
+
+04-05-2009: Domen Kozar v0.3.0
+------------------------------
+
+  * fixed a bug when sources were not invalidated (in cache) on startup
   * complete refactoring
 
 16-04-2009: Domen Kozar v0.2.1

@@ -4,13 +4,16 @@ import re
 
 setup(
     name='MinificationWebHelpers',
-    version='0.3.0',
+    version='0.3.1',
     description='CSS and Javascript Minification/Combination Upgrade to WebHelpers',
     long_description=open('README.txt').read(),
     author='Pedro Algarvio & Domen Kozar',
     author_email='ufs@ufsoft.org',
     url='http://docs.fubar.si/minwebhelpers/',
     install_requires=["Pylons", "WebHelpers", "beaker", "cssutils"],
+    tests_require=['nose'],
+    test_suite='nose.collector',
+    zip_safe=False,
     packages=find_packages(),
     include_package_data=True,
 )

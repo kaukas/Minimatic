@@ -24,14 +24,13 @@ beaker_kwargs = dict(key='sources',
                      type='memory',
                      invalidate_on_startup=True)
 
-@beaker_cache(**beaker_kwargs)
 def combine_sources(sources, ext, fs_root):
     if len(sources) < 2:
         return sources
 
     names = list()
     js_buffer = StringIO.StringIO()
-    base = os.path.commonprefix([os.path.dirname(s) + '/' for s in sources])
+    base = os.path.commonprefix([os.path.dirname(s) for s in sources])
 
     for source in sources:
         # get a list of all filenames without extensions
@@ -48,7 +47,7 @@ def combine_sources(sources, ext, fs_root):
 
     # glue a new name and generate path to it
     fname = '.'.join(names + ['COMBINED', ext])
-    fpath = os.path.join(fs_root, base.lstrip('/'), fname)
+    fpath = os.path.join(fs_root, base.strip('/'), fname)
 
     # write the combined file
     f = open(fpath, 'w')
@@ -57,7 +56,6 @@ def combine_sources(sources, ext, fs_root):
 
     return [base + fname]
 
-@beaker_cache(**beaker_kwargs)
 def minify_sources(sources, ext, fs_root=''):
     if 'js' in ext:
         js_minify = JavascriptMinify()
@@ -93,14 +91,18 @@ def minify_sources(sources, ext, fs_root=''):
 def base_link(ext, *sources, **options):
     combined = options.pop('combined', False)
     minified = options.pop('minified', False)
+    beaker_options = options.pop('beaker_kwargs', False)
     fs_root = config.get('pylons.paths').get('static_files')
 
     if not (config.get('debug', False) or options.get('builtins', False)):
+        if beaker_options:
+            beaker_kwargs.update(beaker_options)
+
         if combined:
-            sources = combine_sources(list(sources), ext, fs_root)
+            sources = beaker_cache(**beaker_kwargs)(combine_sources)(list(sources), ext, fs_root)
 
         if minified:
-            sources = minify_sources(list(sources), '.min.' + ext, fs_root)
+            sources = beaker_cache(**beaker_kwargs)(minify_sources)(list(sources), '.min.' + ext, fs_root)
 
     if 'js' in ext:
         return __javascript_link(*sources, **options)

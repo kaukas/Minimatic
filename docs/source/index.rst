@@ -34,7 +34,7 @@ Terminology
 MinificationWebHelpers_ cache your javascript and css files through Beaker_'s
 ``@beaker.cache`` decorator.
 
-Memory cache is used together with `expire=None` and `invalidate_on_startup=True`.
+Memory cache is used together with `expire='never'` and `invalidate_on_startup=True`.
 
 Javascript minification is achieved through python port of jsmin_.
 
