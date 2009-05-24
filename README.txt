@@ -10,6 +10,7 @@ and stylesheet_link_ functions:
   passed to it's minimum size to reduce page load times.
 * **combined**: Joins all files passed into a single one to reduce server
   requests which in turn reduces page load times.
+* **beaker_kwargs** (dict): override default arguments that will be passed to `beaker_cache`. `beaker_kwargs.update()` is issued on default arguments.
 
 For an up-to-date read of the documentation, please `read the documentation
 page on site`__.

@@ -26,7 +26,7 @@ class MinificationTestCase(TestCase):
         css_source = stylesheet_link('/deep/a.css', '/b.css', combined=True, minified=True)
         self.assert_('"/a.b.COMBINED.min.css"' in css_source)
         self.assert_('"/a.b.COMBINED.min.js"' in js_source)
-
+        
         # combine
         js_source = javascript_link('/deep/a.js', '/b.js', combined=True)
         css_source = stylesheet_link('/deep/a.css', '/b.css', combined=True)
@@ -41,17 +41,33 @@ class MinificationTestCase(TestCase):
         self.assert_('"/deep/a.min.js"' in js_source)
         self.assert_('"/b.min.js"' in js_source)
 
-        # both root
+        # root minify and combined
         js_source = javascript_link('/c.js', '/b.js', combined=True, minified=True)
         css_source = stylesheet_link('/c.css', '/b.css', combined=True, minified=True)
         self.assert_('"/c.b.COMBINED.min.css"' in css_source)
         self.assert_('"/c.b.COMBINED.min.js"' in js_source)
+
+        # root minify
+        js_source = javascript_link('/c.js', '/b.js', minified=True)
+        css_source = stylesheet_link('/c.css', '/b.css', minified=True)
+        self.assert_('"/b.min.css"' in css_source)
+        self.assert_('"/b.min.js"' in js_source)
+        self.assert_('"/c.min.js"' in js_source)
+        self.assert_('"/c.min.js"' in js_source)
+
+        # both root minify and combined
+        js_source = javascript_link('/deep/a.js', '/deep/d.js', combined=True, minified=True)
+        css_source = stylesheet_link('/deep/a.css', '/deep/d.css', combined=True, minified=True)
+        self.assert_('"/deep/a.d.COMBINED.min.css"' in css_source)
+        self.assert_('"/deep/a.d.COMBINED.min.js"' in js_source)
 
         # Cleanup
         self.purge_files('a.b.COMBINED.min.js', 'a.b.COMBINED.min.css')
         self.purge_files('a.b.COMBINED.js', 'a.b.COMBINED.css')
         self.purge_files('deep/a.min.css', 'deep/a.min.js', 'b.min.js', 'b.min.css')
         self.purge_files('c.b.COMBINED.min.js', 'c.b.COMBINED.min.css')
+        #self.purge_files('b.min.js', 'b.min.css', 'c.min.js', 'c.min.css')
+        self.purge_files('deep/a.d.COMBINED.min.js', 'deep/a.d.COMBINED.min.css')
 
     def test_beaker_kwargs(self):
         """Testing for proper beaker kwargs usage"""

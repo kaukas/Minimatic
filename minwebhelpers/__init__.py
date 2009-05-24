@@ -54,7 +54,7 @@ def combine_sources(sources, ext, fs_root):
     f.write(js_buffer.getvalue())
     f.close()
 
-    return [base + fname]
+    return [os.path.join(base, fname)]
 
 def minify_sources(sources, ext, fs_root=''):
     if 'js' in ext:
