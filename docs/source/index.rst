@@ -30,7 +30,7 @@ and stylesheet_link_ functions:
 .. code-block:: python
 
 	# default args
-	beaker_kwargs = dict(key='sources', expire='never', type='memory', invalidate_on_startup=True)
+	beaker_kwargs = dict(key='sources', expire='never', type='memory')
 
 .. versionadded:: 0.3.1
 	`beaker_kwargs` parameter

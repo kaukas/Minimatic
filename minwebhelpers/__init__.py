@@ -21,8 +21,7 @@ __all__ = ['javascript_link', 'stylesheet_link']
 log = logging.getLogger(__name__)
 beaker_kwargs = dict(key='sources',
                      expire='never',
-                     type='memory',
-                     invalidate_on_startup=True)
+                     type='memory')
 
 def combine_sources(sources, ext, fs_root):
     if len(sources) < 2:
