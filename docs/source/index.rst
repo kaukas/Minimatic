@@ -6,7 +6,9 @@
 :mod:`minwebhelpers` -- Welcome to MinificationWebHelpers's documentation!
 ==========================================================================
 
-.. module:: repoze.who.plugins.formcookie
+.. module:: minwebhelpers
+	 :synopsis: Extension to WebHelpers
+
 .. moduleauthor:: Pedro Algarvio
 
 :Author: Pedro Algarvio <ufs_REMOVE@ME_ufsoft.org>
@@ -25,6 +27,7 @@ and stylesheet_link_ functions:
 * **combined** (bool): Joins all files passed into a single one to reduce server
   requests which in turn reduces page load times.
 * **beaker_kwargs** (dict): override default arguments that will be passed to `beaker_cache`.  `beaker_kwargs.update()` is issued on default arguments.
+* **combined_filename** (string): Name of the filename that will be used in conjunction with combined=True
 
 .. code-block:: python
 
@@ -39,8 +42,6 @@ page on site`__.
 	 
 	 Running Pylons/TG application in debug mode will force minfied and combined options off.
 
-.. versionadded:: 0.3.1
-	`beaker_kwargs` parameter
 
 
 Terminology
@@ -49,7 +50,7 @@ Terminology
 MinificationWebHelpers_ cache your javascript and css files through Beaker_'s
 ``@beaker.cache`` decorator.
 
-Javascript minification is achieved through python port of jsmin_.
+Javascript minification is achieved through Python port of jsmin_.
 
 Usage
 -----
@@ -69,7 +70,8 @@ Then, inside a template you could have:
     ${ h.javascript_link('/js/file1.js',
                          '/js/file2.js',
                          minified=True,
-                         combined=True ) }
+                         combined=True,
+												 combined_filename='all_javascript_files') }
     ${ h.stylesheet_link('/css/style1.css',
                          '/css/style2.css',
                          minified=True,
@@ -103,13 +105,28 @@ Or if you wish to install current trunk::
 .. _jsmin: http://www.crockford.com/javascript/jsmin.html
 .. __: http://docs.fubar.si/minwebhelpers/
 
+
+API
+---
+
+.. autofunction:: minwebhelpers.javascript_link
+
+.. autofunction:: minwebhelpers.stylesheet_link
+
+.. autofunction:: minwebhelpers.base_link
+
+.. autofunction:: minwebhelpers.minify_sources
+
+.. autofunction:: minwebhelpers.combine_sources
+
+
 Changelog
-=========
+---------
 
 .. toctree::
-	 :maxdepth: 2
+   :maxdepth: 2
 
-	 changelog
+   changelog
 
 Indices and tables
 ==================

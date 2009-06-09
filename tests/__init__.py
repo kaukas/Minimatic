@@ -89,6 +89,12 @@ class MinificationTestCase(TestCase):
         css_source = stylesheet_link('/js/1.css', '/jquery/2.css', combined=True, minified=True)
         self.assert_('"/1.2.COMBINED.min.css"' in css_source)
         self.assert_('"/1.2.COMBINED.min.js"' in js_source)
+    
+    def test_specified_filename(self):
+        js_source = javascript_link('/js/1.js', '/jquery/2.js', combined=True, minified=True, combined_filename="w00t_1")
+        css_source = stylesheet_link('/js/1.css', '/jquery/2.css', combined=True, minified=True, combined_filename="foobar")
+        self.assert_('"/w00t_1.COMBINED.min.js"' in js_source)
+        self.assert_('"/foobar.COMBINED.min.css"' in css_source)
 
     def test_beaker_kwargs(self):
         """Testing for proper beaker kwargs usage"""
