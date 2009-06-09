@@ -1,3 +1,8 @@
+22-05-2009: Domen Kozar v0.3.2
+------------------------------
+
+	* fixed a bug when two paths were similar and resulted in IOError
+
 22-05-2009: Domen Kozar v0.3.1
 ------------------------------
 

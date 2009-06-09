@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import os
+from tempfile import mkdtemp
+from shutil import rmtree
 from unittest import TestCase
 
 import minwebhelpers
@@ -14,10 +16,31 @@ minwebhelpers.beaker_cache = beaker_cache
 
 class MinificationTestCase(TestCase):
 
-    def purge_files(self, *files):
-        for file_ in files:
-            path = os.path.join(fixture_path, file_)
-            os.remove(path)
+    def setUp(self):
+        self.fixture_path = mkdtemp()
+        minwebhelpers.config['pylons.paths']['static_files'] = self.fixture_path
+
+        self.touch_file('b.js')
+        self.touch_file('b.css')
+        self.touch_file('c.css')
+        self.touch_file('c.js')
+        os.mkdir(os.path.join(self.fixture_path, 'deep'))
+        self.touch_file('deep/a.css')
+        self.touch_file('deep/a.js')
+        self.touch_file('deep/d.css')
+        self.touch_file('deep/d.js')
+        os.mkdir(os.path.join(self.fixture_path, 'js'))
+        os.mkdir(os.path.join(self.fixture_path, 'jquery'))
+        self.touch_file('js/1.css')
+        self.touch_file('js/1.js')
+        self.touch_file('jquery/2.css')
+        self.touch_file('jquery/2.js')
+
+    def tearDown(self):
+        rmtree(self.fixture_path)
+
+    def touch_file(self, path):
+        open(os.path.join(self.fixture_path, path), 'w').close()
 
     def test_paths(self):
         """Testing if paths are constructed correctly"""
@@ -61,13 +84,11 @@ class MinificationTestCase(TestCase):
         self.assert_('"/deep/a.d.COMBINED.min.css"' in css_source)
         self.assert_('"/deep/a.d.COMBINED.min.js"' in js_source)
 
-        # Cleanup
-        self.purge_files('a.b.COMBINED.min.js', 'a.b.COMBINED.min.css')
-        self.purge_files('a.b.COMBINED.js', 'a.b.COMBINED.css')
-        self.purge_files('deep/a.min.css', 'deep/a.min.js', 'b.min.js', 'b.min.css')
-        self.purge_files('c.b.COMBINED.min.js', 'c.b.COMBINED.min.css')
-        #self.purge_files('b.min.js', 'b.min.css', 'c.min.js', 'c.min.css')
-        self.purge_files('deep/a.d.COMBINED.min.js', 'deep/a.d.COMBINED.min.css')
+    def test_two_deep_paths(self):
+        js_source = javascript_link('/js/1.js', '/jquery/2.js', combined=True, minified=True)
+        css_source = stylesheet_link('/js/1.css', '/jquery/2.css', combined=True, minified=True)
+        self.assert_('"/1.2.COMBINED.min.css"' in css_source)
+        self.assert_('"/1.2.COMBINED.min.js"' in js_source)
 
     def test_beaker_kwargs(self):
         """Testing for proper beaker kwargs usage"""

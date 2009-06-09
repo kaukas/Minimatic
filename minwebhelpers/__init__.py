@@ -29,7 +29,7 @@ def combine_sources(sources, ext, fs_root):
 
     names = list()
     js_buffer = StringIO.StringIO()
-    base = os.path.commonprefix([os.path.dirname(s) for s in sources])
+    base = os.path.dirname(os.path.commonprefix(sources))
 
     for source in sources:
         # get a list of all filenames without extensions

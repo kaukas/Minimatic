@@ -24,19 +24,24 @@ and stylesheet_link_ functions:
   passed to it's minimum size to reduce page load times.
 * **combined** (bool): Joins all files passed into a single one to reduce server
   requests which in turn reduces page load times.
-* **beaker_kwargs** (dict): override default arguments that will be passed to `beaker_cache`.
-`beaker_kwargs.update()` is issued on default arguments.
+* **beaker_kwargs** (dict): override default arguments that will be passed to `beaker_cache`.  `beaker_kwargs.update()` is issued on default arguments.
 
 .. code-block:: python
 
 	# default args
 	beaker_kwargs = dict(key='sources', expire='never', type='memory')
 
+For an up-to-date read of the documentation, please `read the documentation
+page on site`__.
+
+
+.. note::
+	 
+	 Running Pylons/TG application in debug mode will force minfied and combined options off.
+
 .. versionadded:: 0.3.1
 	`beaker_kwargs` parameter
 
-For an up-to-date read of the documentation, please `read the documentation
-page on site`__.
 
 Terminology
 -----------
