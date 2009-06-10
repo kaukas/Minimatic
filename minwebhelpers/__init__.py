@@ -6,15 +6,18 @@ import re
 import os
 import logging
 import StringIO
+# URLs are always with / separators
+import posixpath as path
 
 import cssutils
-from jsmin import JavascriptMinify
 from cssutils.serialize import CSSSerializer
 from pylons import config
 from pylons.decorators.cache import beaker_cache
 
 from webhelpers.html.tags import javascript_link as __javascript_link
 from webhelpers.html.tags import stylesheet_link as __stylesheet_link
+
+from minwebhelpers.jsmin import JavascriptMinify
 
 
 __all__ = ['javascript_link', 'stylesheet_link']
@@ -42,16 +45,16 @@ def combine_sources(sources, ext, fs_root, filename=False):
 
     names = list()
     js_buffer = StringIO.StringIO()
-    base = os.path.dirname(os.path.commonprefix(sources))
+    base = path.dirname(os.path.commonprefix(sources))
 
     for source in sources:
         # get a list of all filenames without extensions
-        js_file = os.path.basename(source)
-        js_file_name = os.path.splitext(js_file)[0]
+        js_file = path.basename(source)
+        js_file_name = path.splitext(js_file)[0]
         names.append(js_file_name)
 
         # build a master file with all contents
-        full_source = os.path.join(fs_root, source.lstrip(os.sep))
+        full_source = path.join(fs_root, (source).lstrip('/'))
         f = open(full_source, 'r')
         js_buffer.write(f.read())
         js_buffer.write('\n')
@@ -61,14 +64,14 @@ def combine_sources(sources, ext, fs_root, filename=False):
     if filename:
         names = [filename]
     fname = '.'.join(names + ['COMBINED', ext])
-    fpath = os.path.join(fs_root, base.strip(os.sep), fname)
+    fpath = path.join(fs_root, (base).lstrip('/'), fname)
 
     # write the combined file
     f = open(fpath, 'w')
     f.write(js_buffer.getvalue())
     f.close()
 
-    return [os.path.join(base, fname)]
+    return [path.join(base, fname)]
 
 def minify_sources(sources, ext, fs_root=''):
     """Use utilities to minify javascript or css.
@@ -88,12 +91,12 @@ def minify_sources(sources, ext, fs_root=''):
 
     for source in sources:
         # generate full path to source
-        no_ext_source = os.path.splitext(source)[0]
-        full_source = os.path.join(fs_root, (no_ext_source + ext).lstrip(os.sep))
+        no_ext_source = path.splitext(source)[0]
+        full_source = path.join(fs_root, (no_ext_source + ext).lstrip('/'))
 
         # generate minified source path
-        full_source = os.path.join(fs_root, (source).lstrip(os.sep))
-        no_ext_full_source = os.path.splitext(full_source)[0]
+        full_source = path.join(fs_root, (source).lstrip('/'))
+        no_ext_full_source = path.splitext(full_source)[0]
         minified = no_ext_full_source + ext
 
         f_minified_source = open(minified, 'w')
