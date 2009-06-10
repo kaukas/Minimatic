@@ -51,7 +51,7 @@ def combine_sources(sources, ext, fs_root, filename=False):
         names.append(js_file_name)
 
         # build a master file with all contents
-        full_source = os.path.join(fs_root, source.lstrip('/'))
+        full_source = os.path.join(fs_root, source.lstrip(os.sep))
         f = open(full_source, 'r')
         js_buffer.write(f.read())
         js_buffer.write('\n')
@@ -61,7 +61,7 @@ def combine_sources(sources, ext, fs_root, filename=False):
     if filename:
         names = [filename]
     fname = '.'.join(names + ['COMBINED', ext])
-    fpath = os.path.join(fs_root, base.strip('/'), fname)
+    fpath = os.path.join(fs_root, base.strip(os.sep), fname)
 
     # write the combined file
     f = open(fpath, 'w')
@@ -89,10 +89,10 @@ def minify_sources(sources, ext, fs_root=''):
     for source in sources:
         # generate full path to source
         no_ext_source = os.path.splitext(source)[0]
-        full_source = os.path.join(fs_root, (no_ext_source + ext).lstrip('/'))
+        full_source = os.path.join(fs_root, (no_ext_source + ext).lstrip(os.sep))
 
         # generate minified source path
-        full_source = os.path.join(fs_root, (source).lstrip('/'))
+        full_source = os.path.join(fs_root, (source).lstrip(os.sep))
         no_ext_full_source = os.path.splitext(full_source)[0]
         minified = no_ext_full_source + ext
 
