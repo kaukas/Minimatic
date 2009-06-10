@@ -1,4 +1,9 @@
-22-05-2009: Domen Kozar v0.3.2
+10-06-2009: Domen Kozar v0.3.3
+------------------------------
+
+	* fix compatibility with Windows platform (os.path)
+
+09-06-2009: Domen Kozar v0.3.2
 ------------------------------
 
 	* added `combined_filename` parameter
