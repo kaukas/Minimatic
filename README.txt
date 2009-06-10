@@ -6,11 +6,12 @@ Consider the MinificationWebHelpers_ as an extension to WebHelpers_.
 Basicly it adds two more options to the WebHelpers_ javascript_link_
 and stylesheet_link_ functions:
 
-* **minified**: Minifies, ie, reduces as much as possible each of the files
+* **minified** (bool): Minifies, ie, reduces as much as possible each of the files
   passed to it's minimum size to reduce page load times.
-* **combined**: Joins all files passed into a single one to reduce server
+* **combined** (bool): Joins all files passed into a single one to reduce server
   requests which in turn reduces page load times.
-* **beaker_kwargs** (dict): override default arguments that will be passed to `beaker_cache`. `beaker_kwargs.update()` is issued on default arguments.
+* **beaker_kwargs** (dict): override default arguments that will be passed to `beaker_cache`.  `beaker_kwargs.update()` is issued on default arguments.
+* **combined_filename** (string): Name of the filename that will be used in conjunction with combined=True
 
 For an up-to-date read of the documentation, please `read the documentation
 page on site`__.
