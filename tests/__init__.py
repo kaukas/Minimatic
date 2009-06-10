@@ -42,6 +42,11 @@ class MinificationTestCase(TestCase):
     def touch_file(self, path):
         open(os.path.join(self.fixture_path, path), 'w').close()
 
+    def write_file(self, path, contents):
+        f = open(os.path.join(self.fixture_path, path), 'w')
+        f.write(contents)
+        f.close()
+
     def test_paths(self):
         """Testing if paths are constructed correctly"""
         # minify and combine
@@ -106,3 +111,35 @@ class MinificationTestCase(TestCase):
         from fixtures import beaker_container
         beaker_kwargs.update({'foo': 'bar'})
         self.assertEqual(beaker_container, beaker_kwargs)
+
+    def test_css_leading_zero(self):
+        self.write_file('js/1.css', """
+        p{
+            font-size:0.83em !important;
+        }""")
+
+        css_source = stylesheet_link('/js/1.css', minified=True)
+
+        self.assertEqual(open(os.path.join(self.fixture_path, 'js/1.min.css')).read(), 'p{font-size:.83em !important}')
+
+    def test_css_no_leading_zero(self):
+        self.write_file('js/1.css', """
+        p{
+            font-size: 10.83em !important;
+        }""")
+
+        css_source = stylesheet_link('/js/1.css', minified=True)
+
+        self.assertEqual(open(os.path.join(self.fixture_path, 'js/1.min.css')).read(), 'p{font-size:10.83em !important}')
+
+    def test_zero_px(self):
+        self.write_file('js/1.css', """
+        p{
+            border:0px 1pt 0px 0em;
+            border:1px 0em 2em 0pt;
+        }""")
+
+        css_source = stylesheet_link('/js/1.css', minified=True)
+
+        self.assertEqual(open(os.path.join(self.fixture_path, 'js/1.min.css')).read(),
+            'p{border:0 1pt 0 0;border:1px 0 2em 0}')

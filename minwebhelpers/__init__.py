@@ -104,6 +104,7 @@ def minify_sources(sources, ext, fs_root=''):
         # minify js source (read stream is auto-closed inside)
         if 'js' in ext:
             js_minify.minify(open(full_source, 'r'), f_minified_source)
+
         # minify css source
         if 'css' in ext:
             sheet = cssutils.parseFile(full_source)
@@ -185,8 +186,9 @@ def stylesheet_link(*sources, **options):
 
 
 class CSSUtilsMinificationSerializer(CSSSerializer):
-    def __init__(self, prefs=None):
-        CSSSerializer.__init__(self, prefs)
+    
+    DOT_ZERO_REGEX = re.compile(r'(?<=[^\d])0(\.\d+)')
+    ZERO_PX_REGEX = re.compile(r'([^\d][0])(?:px|em|pt)')
 
     def do_css_CSSStyleDeclaration(self, style, separator=None):
         try:
@@ -196,29 +198,11 @@ class CSSUtilsMinificationSerializer(CSSSerializer):
                 style.setProperty('color', color)
         except:
             pass
-        return re.sub(r'0\.([\d])+', r'.\1',
-                      re.sub(r'(([^\d][0])+(px|em)+)+', r'\2',
-                      CSSSerializer.do_css_CSSStyleDeclaration(self, style,
-                                                               separator)))
+        output = CSSSerializer.do_css_CSSStyleDeclaration(self, style, separator)
+        output = self.ZERO_PX_REGEX.sub(r'\1', output)
+        return self.DOT_ZERO_REGEX.sub(r'\1', output)
 
     def change_colors(self, color):
-        colours = {
-            'black': '#000000',
-            'fuchia': '#ff00ff',
-            'yellow': '#ffff00',
-            '#808080': 'gray',
-            '#008000': 'green',
-            '#800000': 'maroon',
-            '#000800': 'navy',
-            '#808000': 'olive',
-            '#800080': 'purple',
-            '#ff0000': 'red',
-            '#c0c0c0': 'silver',
-            '#008080': 'teal'
-        }
-        if color.lower() in colours:
-            color = colours[color.lower()]
-
         if color.startswith('#') and len(color) == 7:
             if color[1]==color[2] and color[3]==color[4] and color[5]==color[6]:
                 color = '#%s%s%s' % (color[1], color[3], color[5])
