@@ -1,3 +1,8 @@
+10-06-2009: Domen Kozar v0.3.4
+------------------------------
+
+	* finally refactored custom cssutils serializer, threw out some stuff and fixed bugs.
+
 10-06-2009: Domen Kozar v0.3.3
 ------------------------------
 
