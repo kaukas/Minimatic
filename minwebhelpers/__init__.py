@@ -8,6 +8,7 @@ import logging
 import StringIO
 # URLs are always with / separators
 import posixpath as path
+import datetime
 
 import cssutils
 from cssutils.serialize import CSSSerializer
@@ -158,6 +159,11 @@ def base_link(ext, *sources, **options):
             beaker_kwargs.update(beaker_options)
 
         if combined:
+            if c_fn:
+                fn_dict = dict(
+                    timestamp=datetime.datetime.now().strftime('%Y%m%d-%H%M')
+                    )
+                c_fn = c_fn % fn_dict
             sources = beaker_cache(**beaker_kwargs)\
                 (combine_sources)(list(sources), ext, fs_root, filename=c_fn)
 
