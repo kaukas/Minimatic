@@ -9,6 +9,8 @@ import StringIO
 # URLs are always with / separators
 import posixpath as path
 import datetime
+import errno
+import shutil
 
 import cssutils
 from cssutils.serialize import CSSSerializer
@@ -27,6 +29,33 @@ beaker_kwargs = dict(key='sources',
                      expire='never',
                      type='memory')
 
+done_cleanup = False
+
+def cleanup():
+    """Remove existing files in static_files/COMBINED directory to prevent a
+    build-up of stale combined files - combined files are recreated (possibly
+    with a varying timestamp included in the filename) on each server
+    restart. Unfortunately pylons.paths.static_files is not set at module
+    import time so the cleanup function should be called the first time
+    combine_sources is run."""
+
+    global done_cleanup
+
+    if done_cleanup:
+        return
+
+    fs_root = config.get('pylons.paths').get('static_files')
+    combined_root = os.path.join(fs_root, '.COMBINED')
+    try:
+        shutil.rmtree(combined_root)
+    except (OSError,), e:
+        if e.errno != errno.ENOENT:
+            raise
+
+    os.makedirs(combined_root)
+
+    done_cleanup = True
+
 def combine_sources(sources, ext, fs_root, filename=False):
     """Use utilities to combine two or more files together.
     
@@ -41,6 +70,9 @@ def combine_sources(sources, ext, fs_root, filename=False):
 
     :returns: List of path to minified source
     """
+
+    cleanup()
+
     if len(sources) < 2:
         return sources
 
@@ -65,14 +97,14 @@ def combine_sources(sources, ext, fs_root, filename=False):
     if filename:
         names = [filename]
     fname = '.'.join(names + ['COMBINED', ext])
-    fpath = path.join(fs_root, (base).lstrip('/'), fname)
+    fpath = path.join(fs_root, '.COMBINED', (base).lstrip('/'), fname)
 
     # write the combined file
     f = open(fpath, 'w')
     f.write(js_buffer.getvalue())
     f.close()
 
-    return [path.join(base, fname)]
+    return [path.join(base, '.COMBINED', fname)]
 
 def minify_sources(sources, ext, fs_root=''):
     """Use utilities to minify javascript or css.
