@@ -1,3 +1,8 @@
+28-09-2009: Domen Kozar v0.3.5
+------------------------------
+
+	* added `timestamp` parameter [thanks to bobf]
+
 10-06-2009: Domen Kozar v0.3.4
 ------------------------------
 

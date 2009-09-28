@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import time
 from tempfile import mkdtemp
 from shutil import rmtree
 from unittest import TestCase
@@ -9,7 +10,7 @@ from unittest import TestCase
 import minwebhelpers
 from minwebhelpers import javascript_link, stylesheet_link, beaker_kwargs
 
-from fixtures import config, beaker_cache, fixture_path
+from fixtures import config, beaker_cache, fixture_path, memoize
 minwebhelpers.config = config
 minwebhelpers.beaker_cache = beaker_cache
 
@@ -111,6 +112,26 @@ class MinificationTestCase(TestCase):
         from fixtures import beaker_container
         beaker_kwargs.update({'foo': 'bar'})
         self.assertEqual(beaker_container, beaker_kwargs)
+
+    def test_timestamp(self):
+        """test that timestamp is really remembered"""
+        # apply real memoize to do proper testing
+        minwebhelpers.beaker_cache = memoize
+
+        css_source_1 = stylesheet_link('/deep/a.css', '/b.css', combined=True, minified=True, timestamp=True)
+        time.sleep(1)
+        css_source_2 = stylesheet_link('/deep/a.css', '/b.css', combined=True, minified=True, timestamp=True)
+        self.assertEqual(css_source_1, css_source_2)
+
+        js_source_1 = stylesheet_link('/deep/a.js', '/b.js', combined=True, minified=True, timestamp=True)
+        time.sleep(1)
+        js_source_2 = stylesheet_link('/deep/a.js', '/b.js', combined=True, minified=True, timestamp=True)
+        self.assertEqual(js_source_1, js_source_2)
+
+        # cleanup 
+        minwebhelpers.beaker_cache = beaker_cache
+
+## CSS STUFF
 
     def test_css_leading_zero(self):
         self.write_file('js/1.css', """

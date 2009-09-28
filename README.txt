@@ -12,6 +12,7 @@ and stylesheet_link_ functions:
   requests which in turn reduces page load times.
 * **beaker_kwargs** (dict): override default arguments that will be passed to `beaker_cache`.  `beaker_kwargs.update()` is issued on default arguments.
 * **combined_filename** (string): Name of the filename that will be used in conjunction with combined=True
+* **timestamp** append `time.time` timestamp to file, eg. test.js?t=123012343
 
 For an up-to-date read of the documentation, please `read the documentation
 page on site`__.

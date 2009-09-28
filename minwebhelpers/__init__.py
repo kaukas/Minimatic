@@ -28,7 +28,13 @@ beaker_kwargs = dict(key='sources',
                      expire='never',
                      type='memory')
 
-def combine_sources(sources, ext, fs_root, filename=False):
+def generate_timestamp(timestamp):
+    if timestamp:
+        return '?t=' + str(int(time.time()))
+    else:
+        return ''
+
+def combine_sources(sources, ext, fs_root, filename=False, timestamp=False):
     """Use utilities to combine two or more files together.
     
     :param sources: Paths of source files
@@ -66,7 +72,7 @@ def combine_sources(sources, ext, fs_root, filename=False):
     # glue a new name and generate path to it
     if filename:
         names = [filename]
-    fname = '.'.join(names + ['COMBINED', ext])
+    fname = '.'.join(names + ['COMBINED', ext + generate_timestamp(timestamp)])
     fpath = path.join(fs_root, (base).lstrip('/'), fname)
 
     # write the combined file
@@ -76,7 +82,7 @@ def combine_sources(sources, ext, fs_root, filename=False):
 
     return [path.join(base, fname)]
 
-def minify_sources(sources, ext, fs_root=''):
+def minify_sources(sources, ext, fs_root='', timestamp=False):
     """Use utilities to minify javascript or css.
     
     :param sources: Paths of source files
@@ -116,7 +122,7 @@ def minify_sources(sources, ext, fs_root=''):
             f_minified_source.write(sheet.cssText)
 
         f_minified_source.close()
-        minified_sources.append(no_ext_source + ext)
+        minified_sources.append(no_ext_source + ext + generate_timestamp(timestamp))
 
     return minified_sources
 
@@ -132,12 +138,14 @@ def base_link(ext, *sources, **options):
     :param minified: if True minifies javascript or css files
     :param beaker_kwargs: Beaker options to pass to caching decorators
     :param combined_filename: filename that will be used when combining files
+    :param timestamp: append `time.time` timestamp to file, eg. test.js?t=123012343
     :type ext: string
     :type sources: string
     :type combined_filename: keyword arg
     :type combined: keyword arg
     :type minified: keyword arg
     :type beaker_kwargs: dict
+    :type timestamp: bool
     :returns: HTML source code
     
     .. versionadded:: 0.3.1
@@ -145,15 +153,18 @@ def base_link(ext, *sources, **options):
 
     .. versionadded:: 0.3.2
         `combined_filename` parameter
+
+    .. versionadded:: 0.3.5
+        `timestamp` parameter
     """
-    c_fn = options.pop('combined_filename', False)
+    filename = options.pop('combined_filename', False)
     combined = options.pop('combined', False)
     minified = options.pop('minified', False)
     timestamp = options.pop('timestamp', False)
     beaker_options = options.pop('beaker_kwargs', False)
     fs_root = config.get('pylons.paths').get('static_files')
 
-    if c_fn and not combined:
+    if filename and not combined:
         raise ValueError("combined_filename=True specifies filename for"
             " combined=True parameter which is not set.")
 
@@ -161,19 +172,16 @@ def base_link(ext, *sources, **options):
         if beaker_options:
             beaker_kwargs.update(beaker_options)
 
-        if timestamp:
-            tail = '?t=' + str(int(time.time()))
-        else:
-            tail = ''
-
         if combined:
+            # use beaker_cache decorator to cache the return value
             sources = beaker_cache(**beaker_kwargs)\
-                (combine_sources)(list(sources), ext + tail, fs_root,
-                    filename=c_fn)
+                (combine_sources)(list(sources), ext, fs_root,
+                    filename, timestamp)
 
         if minified:
+            # use beaker_cache decorator to cache the return value
             sources = beaker_cache(**beaker_kwargs)\
-                (minify_sources)(list(sources), '.min.' + ext + tail, fs_root)
+                (minify_sources)(list(sources), '.min.' + ext, fs_root, timestamp)
 
     if 'js' in ext:
         return __javascript_link(*sources, **options)

@@ -21,3 +21,15 @@ def beaker_cache(*args, **kwargs):
         return f(*a, **kw)
 
     return wrapper
+
+memo = {}
+def memoize(*args, **kwargs):
+
+    @decorator
+    def memoizer(f, *a, **kw):
+        key = repr(f) + repr(a) + repr(kw)
+        if not memo.has_key(key):
+            memo[key] = f(*a, **kw)
+        return memo[key]
+
+    return memoizer
