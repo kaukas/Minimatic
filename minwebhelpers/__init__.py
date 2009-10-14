@@ -28,6 +28,8 @@ beaker_kwargs = dict(key='sources',
                      expire='never',
                      type='memory')
 
+js_minify = JavascriptMinify()
+
 def generate_timestamp(timestamp):
     if timestamp:
         return '?t=' + str(int(time.time()))
@@ -69,18 +71,31 @@ def combine_sources(sources, ext, fs_root, filename=False, timestamp=False):
         js_buffer.write('\n')
         f.close()
 
-    # glue a new name and generate path to it
+    fpath = None
     if filename:
-        names = [filename]
-    fname = '.'.join(names + ['COMBINED', ext + generate_timestamp(timestamp)])
-    fpath = path.join(fs_root, (base).lstrip('/'), fname)
+        # if name starts with ./ then we want this specific name
+        if filename.startswith('./'):
+            filename = filename[2:]
+            fname = filename
+            fpath = path.join(fs_root, filename)
+        else:
+            names = [filename]
+    if not fpath:
+        # otherwise glue a new name and generate path to it
+        fname = '.'.join(names + ['COMBINED', ext])
+        fpath = path.join(fs_root, (base).lstrip('/'), fname)
 
     # write the combined file
     f = open(fpath, 'w')
     f.write(js_buffer.getvalue())
     f.close()
 
-    return [path.join(base, fname)]
+    link = path.join(base, fname)
+    if timestamp:
+        timestamp = int(path.getmtime(fpath))
+        link = '%s?t=%s' % (link, timestamp)
+
+    return [link]
 
 def minify_sources(sources, ext, fs_root='', timestamp=False):
     """Use utilities to minify javascript or css.
@@ -122,9 +137,137 @@ def minify_sources(sources, ext, fs_root='', timestamp=False):
             f_minified_source.write(sheet.cssText)
 
         f_minified_source.close()
-        minified_sources.append(no_ext_source + ext + generate_timestamp(timestamp))
+        minified_sources.append(no_ext_source + ext)
 
     return minified_sources
+
+
+def process_sources(sources, ext, fs_root, combined=False, timestamp=False):
+    """Use utilities to combine two or more files together.
+    
+    :param sources: Paths of source files (strings or dicts)
+    :param ext: Type of files
+    :param fs_root: Root of file (normally public dir)
+    :param combined: Filename of the combined file
+    :param timestamp: Should the timestamp be added to the link
+    :type sources: string
+    :type ext: js or css
+    :type fs_root: string
+    :type filename: string
+    :type timestamp: bool
+
+    :returns: List of paths to processed sources
+    """
+
+    if not sources:
+        return []
+    if len(sources) == 1 and isinstance(sources, (str, unicode)):
+        # We have a single file which doesn't even have to be minified
+        return sources
+
+    base = '/'
+
+    # Get the file names and modification dates first
+    for i in range(len(sources)):
+        source = sources[i]
+        # if it's a bare string then we don't want this file to be minified
+        if isinstance(source, (str, unicode)):
+            source = sources[i] = dict(file=source)
+        if not combined and source.get('minify') and not source.get('dest'):
+            raise ValueError(
+                'Either "combined" must be specified or "dest" for every file')
+        source['file_path'] = path.join(fs_root, source['file'].lstrip('/'))
+        if source.get('dest'):
+            source['dest_path'] = path.join(fs_root, source['dest'].lstrip('/'))
+            source['dest_link'] = path.join(base, source['dest'].lstrip('/'))
+        source['modts'] = path.getmtime(source['file_path'])
+
+    if combined:
+        fname = combined.lstrip('/')
+        fpath = path.join(fs_root, fname)
+
+        refresh_needed = False
+        if path.exists(fpath):
+            last_mod = path.getmtime(fpath)
+            refresh_needed = last_mod < max([s['modts'] for s in sources])
+        else:
+            refresh_needed = True
+        buffer = StringIO.StringIO()
+    else:
+        refresh_needed = True
+        buffer = None
+
+    if refresh_needed:
+        for source in sources:
+            # build a master file with all contents
+            dest = buffer
+            if not dest:
+                dest = source['dest_path']
+                if path.exists(dest) and source['modts'] <= path.getmtime(dest):
+                    # The file was not modified since the last processing. Skip
+                    continue
+                dirs = path.dirname(dest)
+                try:
+                    os.makedirs(dirs, 0700)
+                except OSError:
+                    pass
+                dest = open(dest, 'w')
+
+            if 'js' in ext:
+                f = open(source['file_path'], 'r')
+                if source.get('minify'):
+                    # stream is auto-closed inside
+                    js_minify.minify(f, dest)
+                else:
+                    dest.write(f.read())
+                    f.close()
+            elif 'css' in ext:
+                if source.get('minify'):
+                    sheet = cssutils.parseFile(source['file_path'])
+                    sheet.setSerializer(CSSUtilsMinificationSerializer())
+                    cssutils.ser.prefs.useMinified()
+                    dest.write(sheet.cssText)
+                else:
+                    f = open(source['file_path'], 'r')
+                    dest.write(f.read())
+                    f.close()
+            else:
+                raise ValueError('Source type unknown: %s' % ext)
+            if buffer:
+                buffer.write('\n')
+            else:
+                dest.close()
+
+        if buffer:
+            dirs = path.dirname(fpath)
+            try:
+                os.makedirs(dirs, 0700)
+            except OSError:
+                pass
+            # write the combined file
+            f = open(fpath, 'w')
+            f.write(buffer.getvalue())
+            f.close()
+
+    if buffer:
+        last_mod = path.getmtime(fpath)
+
+        link = path.join(base, fname)
+        if timestamp:
+            timestamp = int(last_mod)
+            link = '%s?t=%s' % (link, timestamp)
+        return [link]
+    else:
+        links = []
+        for s in sources:
+            last_mod = path.getmtime(s['dest_path'])
+            link = s['dest_link']
+            if timestamp:
+                timestamp = int(last_mod)
+                link = '%s?t=%s' % (link, timestamp)
+            links.append(link)
+        return links
+
 
 def base_link(ext, *sources, **options):
     """Base function that glues all logic together.
@@ -157,36 +300,40 @@ def base_link(ext, *sources, **options):
     .. versionadded:: 0.3.5
         `timestamp` parameter
     """
-    filename = options.pop('combined_filename', False)
+    #filename = options.pop('combined_filename', False)
     combined = options.pop('combined', False)
-    minified = options.pop('minified', False)
+    #minified = options.pop('minified', False)
     timestamp = options.pop('timestamp', False)
     beaker_options = options.pop('beaker_kwargs', False)
     fs_root = config.get('pylons.paths').get('static_files')
 
-    if filename and not combined:
-        raise ValueError("combined_filename=True specifies filename for"
-            " combined=True parameter which is not set.")
+    #if filename and not combined:
+    #    raise ValueError("combined_filename=True specifies filename for"
+    #        " combined=True parameter which is not set.")
 
     if not (config.get('debug', False) or options.get('builtins', False)):
         if beaker_options:
             beaker_kwargs.update(beaker_options)
 
-        if combined:
-            # use beaker_cache decorator to cache the return value
-            sources = beaker_cache(**beaker_kwargs)\
-                (combine_sources)(list(sources), ext, fs_root,
-                    filename, timestamp)
+        # use beaker_cache to cache the returned sources
+        sources = beaker_cache(**beaker_kwargs)(process_sources)(
+            list(sources), ext, fs_root, combined, timestamp)
+        #if combined:
+        #    # use beaker_cache decorator to cache the return value
+        #    sources = beaker_cache(**beaker_kwargs)\
+        #        (combine_sources)(list(sources), ext, fs_root,
+        #            filename, timestamp)
 
-        if minified:
-            # use beaker_cache decorator to cache the return value
-            sources = beaker_cache(**beaker_kwargs)\
-                (minify_sources)(list(sources), '.min.' + ext, fs_root, timestamp)
+        #if minified:
+        #    # use beaker_cache decorator to cache the return value
+        #    sources = beaker_cache(**beaker_kwargs)\
+        #        (minify_sources)(list(sources), '.min.' + ext, fs_root, timestamp)
 
     if 'js' in ext:
         return __javascript_link(*sources, **options)
     if 'css' in ext:
         return __stylesheet_link(*sources, **options)
+
 
 def javascript_link(*sources, **options):
     """Calls :func:`base_link` with first argument ``js``
