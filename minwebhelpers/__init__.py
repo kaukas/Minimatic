@@ -178,7 +178,7 @@ def base_link(ext, *sources, **options):
     :param combined: the combined file name if the files need to be combined.
         Otherwise they have to have 'dest' parameters
     :param beaker_kwargs: Beaker options to pass to caching decorators
-    :param timestamp: timestamp to files, eg. test.js?t=123012343
+    :param timestamp: append timestamp to links, eg. test.js?t=123012343
     :type ext: string
     :type sources: list of strings or dicts
     :type combined: string
