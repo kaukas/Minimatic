@@ -69,6 +69,8 @@ def process_sources(sources, ext, fs_root, combined=False, timestamp=False):
         if source.get('dest'):
             source['dest_path'] = path.join(fs_root, source['dest'].lstrip('/'))
             source['dest_link'] = path.join(base, source['dest'].lstrip('/'))
+        else:
+            source['dest_link'] = source['file']
         source['modts'] = path.getmtime(source['file_path'])
 
     if combined:
@@ -91,9 +93,12 @@ def process_sources(sources, ext, fs_root, combined=False, timestamp=False):
             # build a master file with all contents
             dest = buffer
             if not dest:
-                dest = source['dest_path']
-                if path.exists(dest) and source['modts'] <= path.getmtime(dest):
-                    # The file was not modified since the last processing. Skip
+                # or separate files
+                dest = source.get('dest_path')
+                if not dest or (path.exists(dest) and \
+                        source['modts'] <= path.getmtime(dest)):
+                    # The file should not be touched or was not modified since
+                    # the last processing. Skip
                     continue
                 dirs = path.dirname(dest)
                 try:
@@ -149,7 +154,8 @@ def process_sources(sources, ext, fs_root, combined=False, timestamp=False):
     else:
         links = []
         for s in sources:
-            last_mod = path.getmtime(s['dest_path'])
+            # If the dest file not set we take the source file mod tstamp
+            last_mod = path.getmtime(s.get('dest_path', s['file_path']))
             link = s['dest_link']
             if timestamp:
                 timestamp = int(last_mod)
