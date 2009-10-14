@@ -200,13 +200,18 @@ def base_link(ext, *sources, **options):
     beaker_options = options.pop('beaker_kwargs', False)
     fs_root = config.get('pylons.paths').get('static_files')
 
+    sources = list(sources)
     if not (config.get('debug', False) or options.get('builtins', False)):
         if beaker_options:
             beaker_kwargs.update(beaker_options)
 
         # use beaker_cache to cache the returned sources
         sources = beaker_cache(**beaker_kwargs)(process_sources)(
-            list(sources), ext, fs_root, combined, timestamp)
+            sources, ext, fs_root, combined, timestamp)
+    else:
+        for i in range(len(sources)):
+            if isinstance(sources[i], dict):
+                sources[i] = sources[i]['file']
 
     if 'js' in ext:
         return __javascript_link(*sources, **options)
