@@ -31,6 +31,63 @@ beaker_kwargs = dict(key='sources',
 js_minify = JavascriptMinify()
 
 
+def css_strip(css):
+    r"""Strip whitespace and comments from a css string.
+
+Given a string containing css rules css_strip returns a string with all
+sequential whitespace changed to one space
+
+    >>> css_strip('''
+    ... body
+    ... {
+    ...     color: #ffffff;
+    ... }''')
+    'body { color: #ffffff; }'
+
+The css comments are stripped as well
+
+    >>> css_strip('''
+    ... /* Page Header */
+    ... #top { /*margin: 0px;*/ border: none }
+    ... ''')
+    '#top { border: none }'
+
+Check some comment edge cases. Comments at the beginning and end:
+
+    >>> css_strip('''/* Comment in the beginning */
+    ... some_css/*comment here*/{url: /some/url/*remove_me*/;}
+    ... /* Comment in the end */''')
+    'some_css {url: /some/url ;}'
+
+Invalid comments:
+
+    >>> css_strip('''/* Unfinished comment - leave it
+    ... though it's a mistake /''')
+    "/* Unfinished comment - leave it though it's a mistake /"
+    >>> css_strip('''/ Unfinished comment - leave it
+    ... though it's a mistake */''')
+    "/ Unfinished comment - leave it though it's a mistake */"
+    """
+    parts = []
+    text_start = 0
+    while True:
+        text_end = css.find('/*', text_start)
+        if text_end == -1:
+            break
+        if text_start < text_end:
+            parts.extend(css[text_start:text_end].split())
+        text_start = css.find('*/', text_end + 2)
+        if text_start == -1:
+            break
+        text_start += 2
+    if text_start > -1 and text_start < len(css) - 1:
+        parts.extend(css[text_start:].split())
+    elif text_start == -1 and text_end < len(css) - 1:
+        parts.extend(css[text_end:].split())
+    css = ' '.join(filter(None, parts))
+    return css
+
+
 def process_sources(sources, ext, fs_root, combined=False, timestamp=False):
     """Use utilities to combine two or more files together.
     
@@ -109,18 +166,22 @@ def process_sources(sources, ext, fs_root, combined=False, timestamp=False):
 
             if 'js' in ext:
                 f = open(source['file_path'], 'r')
-                if source.get('minify'):
+                if source.get('minify') == 'minify':
                     # stream is auto-closed inside
                     js_minify.minify(f, dest)
                 else:
                     dest.write(f.read())
                     f.close()
             elif 'css' in ext:
-                if source.get('minify'):
+                if source.get('minify') == 'minify':
                     sheet = cssutils.parseFile(source['file_path'])
                     sheet.setSerializer(CSSUtilsMinificationSerializer())
                     cssutils.ser.prefs.useMinified()
                     dest.write(sheet.cssText)
+                elif source.get('minify') == 'strip':
+                    f = open(source['file_path'], 'r')
+                    dest.write(css_strip(f.read()))
+                    f.close()
                 else:
                     f = open(source['file_path'], 'r')
                     dest.write(f.read())
