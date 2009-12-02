@@ -89,12 +89,13 @@ Invalid comments:
 
 
 def process_sources(sources, ext, fs_root, combined=False, timestamp=False):
-    """Use utilities to combine two or more files together.
+    """Use utilities to combine and/or minify two or more files together.
+    For more info see :func:`base_link`.
     
     :param sources: Paths of source files (strings or dicts)
     :param ext: Type of files
     :param fs_root: Root of file (normally public dir)
-    :param combined: Filename of the combined file
+    :param combined: Filename of the combined files
     :param timestamp: Should the timestamp be added to the link
     :type sources: string
     :type ext: js or css
@@ -228,26 +229,26 @@ def process_sources(sources, ext, fs_root, combined=False, timestamp=False):
 def base_link(ext, *sources, **options):
     """Base function that glues all logic together.
 
-    It parses options and calls :func:`minify_sources` or :func:`combine_sources`
-    if apropriate.
+    It parses options and calls :func:`process_sources`.
 
     :param ext: js or css helper
     :param sources: a list of source files. Can be a dicts with keys:
-            file='/script.js':      a path to your file
-            minify=False:           should this file be minified
-            dest='/script.min.js':  minified file destination if files are not
-                combined
+            file='/script.js':              a path to your file
+            minify=False|'strip'|'minify':  should this file be minified,
+                                            stripped or left as it is?
+            dest='/script.min.js':          minified file destination (needed if
+                                            files are not combined)
         Alternatively you can provide strings in which case they will be treated
         as
             {file='<your string>', minify=False}
         In this case the files will not be minified and 'combined' must be
         provided
     :param combined: the combined file name if the files need to be combined.
-        Otherwise they have to have 'dest' parameters
+        Otherwise they have to have 'dest' keys
     :param beaker_kwargs: Beaker options to pass to caching decorators
     :param timestamp: append timestamp to links, eg. test.js?t=123012343
     :type ext: string
-    :type sources: list of strings or dicts
+    :type sources: list of strings or dicts or any combination
     :type combined: string
     :type beaker_kwargs: dict
     :type timestamp: bool
