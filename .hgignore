@@ -4,6 +4,8 @@ syntax: regexp
 .*\.orig
 .*\.swp
 ^bin/
+^build/
+^dist/
 ^lib/
 ^include/
 ^Minimatic.egg-info/

@@ -15,6 +15,6 @@ setup(
     tests_require=['nose'],
     test_suite='nose.collector',
     zip_safe=False,
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests', 'tests.fixtures']),
     include_package_data=True,
 )
