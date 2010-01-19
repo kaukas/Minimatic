@@ -19,7 +19,7 @@ from pylons.decorators.cache import beaker_cache
 from webhelpers.html.tags import javascript_link as __javascript_link
 from webhelpers.html.tags import stylesheet_link as __stylesheet_link
 
-from minwebhelpers.jsmin import JavascriptMinify
+from minimatic.jsmin import JavascriptMinify
 
 
 __all__ = ['javascript_link', 'stylesheet_link']

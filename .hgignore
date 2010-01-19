@@ -1,0 +1,9 @@
+syntax: regexp
+
+.*\.pyc
+.*\.orig
+.*\.swp
+^bin/
+^lib/
+^include/
+^Minimatic.egg-info/

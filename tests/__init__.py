@@ -7,19 +7,19 @@ from tempfile import mkdtemp
 from shutil import rmtree
 from unittest import TestCase
 
-import minwebhelpers
-from minwebhelpers import javascript_link, stylesheet_link, beaker_kwargs
+import minimatic
+from minimatic import javascript_link, stylesheet_link, beaker_kwargs
 
 from fixtures import config, beaker_cache, fixture_path, memoize
-minwebhelpers.config = config
-minwebhelpers.beaker_cache = beaker_cache
+minimatic.config = config
+minimatic.beaker_cache = beaker_cache
 
 
 class MinificationTestCase(TestCase):
 
     def setUp(self):
         self.fixture_path = mkdtemp()
-        minwebhelpers.config['pylons.paths']['static_files'] = self.fixture_path
+        minimatic.config['pylons.paths']['static_files'] = self.fixture_path
 
         self.touch_file('b.js')
         self.touch_file('b.css')
@@ -168,7 +168,7 @@ class MinificationTestCase(TestCase):
     def test_timestamp(self):
         """test that timestamp is really remembered"""
         # apply real memoize to do proper testing
-        minwebhelpers.beaker_cache = memoize
+        minimatic.beaker_cache = memoize
 
         css_source_1 = stylesheet_link(
             dict(file='/deep/a.css', minify='minify'),
@@ -199,7 +199,7 @@ class MinificationTestCase(TestCase):
         self.assert_('?t=' in js_source_1)
 
         # cleanup 
-        minwebhelpers.beaker_cache = beaker_cache
+        minimatic.beaker_cache = beaker_cache
 
 ## CSS STUFF
 
