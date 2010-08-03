@@ -9,7 +9,7 @@ reload(sys).setdefaultencoding('utf-8')
 
 setup(
     name='Minimatic',
-    version='1.0',
+    version='1.0.1',
     description='CSS and Javascript Minification/Combination Upgrade to WebHelpers',
     long_description=open(join(dirname(__file__), 'README.rst')).read(),
     author='Pedro Algarvio',

@@ -48,6 +48,17 @@ class MinificationTestCase(TestCase):
         f.write(contents)
         f.close()
 
+    def test_folder_creation(self):
+        """Test how folders are created"""
+        js_source = javascript_link(
+            dict(file='/deep/a.js', minify='minify'),
+            dict(file='/deep/d.js', minify='minify'),
+            combined='/a-new-folder/ad.js')
+        self.assert_('"/a-new-folder/ad.js"' in js_source)
+        folder = os.path.join(self.fixture_path, 'a-new-folder')
+        # Check that the folder is rwxr-xr-x
+        self.assertEquals(os.stat(folder).st_mode & 0777, 0755)
+
     def test_paths(self):
         """Testing if paths are constructed correctly"""
         # minify and combine

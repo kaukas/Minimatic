@@ -18,7 +18,7 @@ Using pip::
 Source code
 -----------
 
-Mercurial repository is located at bitbucket.org_.
+Git repository is located at GitHub.com_.
 
 Usage
 -----
@@ -84,4 +84,4 @@ Serve CSS files separately (uncombined)::
 .. _WebHelpers: http://pylonshq.com/docs/en/0.9.7/thirdparty/webhelpers/
 .. _javascript_link: http://pylonshq.com/docs/en/0.9.7/thirdparty/webhelpers/html/html/#webhelpers.html.tags.javascript_link
 .. _stylesheet_link: http://pylonshq.com/docs/en/0.9.7/thirdparty/webhelpers/html/html/#webhelpers.html.tags.stylesheet_link
-.. _bitbucket.org: https://bitbucket.org/kaukas/minimatic/
+.. _GitHub.com: http://github.com/kaukas/Minimatic 

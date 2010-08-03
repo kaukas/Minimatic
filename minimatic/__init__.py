@@ -160,7 +160,7 @@ def process_sources(sources, ext, fs_root, combined=False, timestamp=False):
                     continue
                 dirs = path.dirname(dest)
                 try:
-                    os.makedirs(dirs, 0700)
+                    os.makedirs(dirs, 0755)
                 except OSError:
                     pass
                 dest = open(dest, 'w')
@@ -197,7 +197,7 @@ def process_sources(sources, ext, fs_root, combined=False, timestamp=False):
         if buffer:
             dirs = path.dirname(fpath)
             try:
-                os.makedirs(dirs, 0700)
+                os.makedirs(dirs, 0755)
             except OSError:
                 pass
             # write the combined file
